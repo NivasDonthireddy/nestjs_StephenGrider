@@ -1,3 +1,4 @@
+require('dotenv').config({ path: `./.env.${process.env.NODE_ENV}` });
 var dbConfig = {
     synchronize: false,
     migrations: ['migrations/*.js'],
@@ -7,11 +8,18 @@ var dbConfig = {
 };
 
 switch(process.env.NODE_ENV){
-    case 'development': 
+    case 'development':
         Object.assign(dbConfig,{
-            type: 'sqlite',
-            database: 'db.sqlite',
+            type: 'mssql',
+            host: 'localhost',
+            port: 1433,
+            database: process.env.DB_HOST,
+            username: process.env.DB_USER,
+            password: process.env.DB_PASSKEY,
             entities: ['**/*.entity.js'],
+            options: {
+                trustServerCertificate: true
+            }
         });
         break;
     case 'test':
@@ -23,9 +31,26 @@ switch(process.env.NODE_ENV){
         });
         break;
     case 'production' :
+        Object.assign(dbConfig,{
+            type: 'mssql',
+            host: process.env.DB_HOST,
+            port: 1433,
+            database: process.env.DB_NAME,
+            username: process.env.DB_USER,
+            password: process.env.DB_PASSKEY,
+            entities: ['**/*.entity.js'],
+            options: {
+                trustServerCertificate: true
+            },
+            migrationsRun: true,
+            entities: ['**/*.entity.js'],
+            ssl: {
+                rejectUnauthorized: false
+            },
+        })
         break;
     default :
-        throw new Error('unkwown environment');
+        throw new Error('unknown environment');
 }
 
 module.exports = dbConfig;
